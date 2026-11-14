@@ -1,0 +1,15 @@
+# secrets - never commit these
+.env
+.env.*
+!.env.example
+
+# editor / OS
+.idea/
+.DS_Store
+Thumbs.db
+
+# build output
+target/
+node_modules/
+dist/
+*.log
