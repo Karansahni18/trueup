@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: trueup-postgres
+    environment:
+      POSTGRES_DB: trueup
+      POSTGRES_USER: trueup_app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - trueup-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trueup_app -d trueup"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: trueup-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - trueup-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  trueup-pgdata:
+  trueup-redisdata:
