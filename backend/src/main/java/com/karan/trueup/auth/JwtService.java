@@ -29,6 +29,10 @@ public class JwtService {
         this.ttlSeconds = ttlSeconds;
     }
 
+    public long getTtlSeconds() {
+        return ttlSeconds;
+    }
+
     public String generateToken(UUID userId, UUID tenantId, Role role) {
         Instant now = Instant.now();
         return Jwts.builder()

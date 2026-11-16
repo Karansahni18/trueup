@@ -1,5 +1,7 @@
 package com.karan.trueup.auth;
 
+import com.karan.trueup.auth.dto.LoginRequest;
+import com.karan.trueup.auth.dto.LoginResponse;
 import com.karan.trueup.auth.dto.RegisterRequest;
 import com.karan.trueup.auth.dto.RegisterResponse;
 import jakarta.validation.Valid;
@@ -24,5 +26,10 @@ public class AuthController {
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         RegisterResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
+        return authService.login(request);
     }
 }

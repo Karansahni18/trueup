@@ -1,8 +1,11 @@
 package com.karan.trueup.auth;
 
+import com.karan.trueup.auth.dto.LoginRequest;
+import com.karan.trueup.auth.dto.LoginResponse;
 import com.karan.trueup.auth.dto.RegisterRequest;
 import com.karan.trueup.auth.dto.RegisterResponse;
 import com.karan.trueup.common.exception.ConflictException;
+import com.karan.trueup.common.exception.UnauthorizedException;
 import com.karan.trueup.tenant.Role;
 import com.karan.trueup.tenant.Tenant;
 import com.karan.trueup.tenant.TenantRepository;
@@ -17,9 +20,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,11 +42,14 @@ class AuthServiceTest {
     @Mock
     PasswordEncoder passwordEncoder;
 
+    @Mock
+    JwtService jwtService;
+
     AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(tenantRepository, userRepository, passwordEncoder);
+        authService = new AuthService(tenantRepository, userRepository, passwordEncoder, jwtService);
     }
 
     @Test
@@ -86,5 +95,43 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.register(
                 new RegisterRequest("Acme", "owner@acme.test", "Str0ngPass!")))
                 .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
+    void login_returnsTokenWhenCredentialsMatch() {
+        User user = new User(new Tenant("Acme"), "owner@acme.test", "stored-hash", Role.OWNER);
+        when(userRepository.findByEmailWithTenant("owner@acme.test")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("Str0ngPass!", "stored-hash")).thenReturn(true);
+        when(jwtService.generateToken(any(), any(), eq(Role.OWNER))).thenReturn("signed-token");
+        when(jwtService.getTtlSeconds()).thenReturn(3600L);
+
+        LoginResponse response = authService.login(new LoginRequest(" Owner@Acme.Test ", "Str0ngPass!"));
+
+        assertThat(response.accessToken()).isEqualTo("signed-token");
+        assertThat(response.tokenType()).isEqualTo("Bearer");
+        assertThat(response.expiresInSeconds()).isEqualTo(3600L);
+    }
+
+    @Test
+    void login_rejectsWrongPassword() {
+        User user = new User(new Tenant("Acme"), "owner@acme.test", "stored-hash", Role.OWNER);
+        when(userRepository.findByEmailWithTenant("owner@acme.test")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong-password", "stored-hash")).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("owner@acme.test", "wrong-password")))
+                .isInstanceOf(UnauthorizedException.class);
+
+        verify(jwtService, never()).generateToken(any(), any(), any());
+    }
+
+    @Test
+    void login_rejectsUnknownEmailButStillComparesAHash() {
+        when(userRepository.findByEmailWithTenant("nobody@acme.test")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("nobody@acme.test", "Str0ngPass!")))
+                .isInstanceOf(UnauthorizedException.class);
+
+        verify(passwordEncoder).matches(eq("Str0ngPass!"), any());
+        verify(jwtService, never()).generateToken(any(), any(), any());
     }
 }
