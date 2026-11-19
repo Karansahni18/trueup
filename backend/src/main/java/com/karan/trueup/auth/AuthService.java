@@ -6,6 +6,7 @@ import com.karan.trueup.auth.dto.RegisterRequest;
 import com.karan.trueup.auth.dto.RegisterResponse;
 import com.karan.trueup.common.exception.ConflictException;
 import com.karan.trueup.common.exception.UnauthorizedException;
+import com.karan.trueup.ledger.ChartOfAccountsService;
 import com.karan.trueup.tenant.Role;
 import com.karan.trueup.tenant.Tenant;
 import com.karan.trueup.tenant.TenantRepository;
@@ -29,16 +30,19 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final ChartOfAccountsService chartOfAccountsService;
     private final String dummyHash;
 
     public AuthService(TenantRepository tenantRepository,
                        UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       ChartOfAccountsService chartOfAccountsService) {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.chartOfAccountsService = chartOfAccountsService;
         this.dummyHash = passwordEncoder.encode("not-a-real-password");
     }
 
@@ -51,6 +55,7 @@ public class AuthService {
         }
 
         Tenant tenant = tenantRepository.save(new Tenant(request.businessName().trim()));
+        chartOfAccountsService.createDefaultAccounts(tenant.getId(), ChartOfAccountsService.DEFAULT_CURRENCY);
         User owner = new User(tenant, email, passwordEncoder.encode(request.password()), Role.OWNER);
 
         try {

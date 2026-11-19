@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.karan.trueup.ledger.ChartOfAccountsService;
 
 import java.util.Optional;
 
@@ -45,11 +46,14 @@ class AuthServiceTest {
     @Mock
     JwtService jwtService;
 
+    @Mock
+    ChartOfAccountsService chartOfAccountsService;
+
     AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(tenantRepository, userRepository, passwordEncoder, jwtService);
+                authService = new AuthService(tenantRepository, userRepository, passwordEncoder, jwtService, chartOfAccountsService);
     }
 
     @Test
@@ -63,6 +67,7 @@ class AuthServiceTest {
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).saveAndFlush(captor.capture());
+        verify(chartOfAccountsService).createDefaultAccounts(any(), eq("USD"));
         User saved = captor.getValue();
 
         assertThat(saved.getEmail()).isEqualTo("owner@acme.test");
@@ -82,6 +87,7 @@ class AuthServiceTest {
 
         verify(tenantRepository, never()).save(any());
         verify(userRepository, never()).saveAndFlush(any());
+        verify(chartOfAccountsService, never()).createDefaultAccounts(any(), any());
     }
 
     @Test
