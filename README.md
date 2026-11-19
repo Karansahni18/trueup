@@ -2,6 +2,8 @@
 
 Payment reconciliation and double-entry ledger platform with AI-assisted matching.
 
+[![CI](https://github.com/Karansahni18/trueup/actions/workflows/ci.yml/badge.svg)](https://github.com/Karansahni18/trueup/actions/workflows/ci.yml)
+
 **Status:** in development (Step 1: repository skeleton)
 
 ## Problem
