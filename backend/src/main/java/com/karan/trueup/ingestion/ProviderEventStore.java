@@ -41,4 +41,12 @@ public class ProviderEventStore {
                 .getSingleResult();
         return count.longValue();
     }
+
+    /** Reads the saved message back as plain JSON text. */
+    public String loadPayload(UUID eventId) {
+        return (String) entityManager
+                .createNativeQuery("SELECT CAST(payload AS text) FROM provider_events WHERE id = :id")
+                .setParameter("id", eventId)
+                .getSingleResult();
+    }
 }
