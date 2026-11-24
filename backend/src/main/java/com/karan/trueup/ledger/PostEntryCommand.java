@@ -4,7 +4,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-public record PostEntryCommand(UUID tenantId, LocalDate entryDate, String description, List<Line> lines) {
+public record PostEntryCommand(UUID tenantId, LocalDate entryDate, String description,
+                               List<Line> lines, UUID sourceEventId) {
+
+    public PostEntryCommand(UUID tenantId, LocalDate entryDate, String description, List<Line> lines) {
+        this(tenantId, entryDate, description, lines, null);
+    }
 
     public record Line(UUID accountId, Direction direction, long amountMinor) {
     }

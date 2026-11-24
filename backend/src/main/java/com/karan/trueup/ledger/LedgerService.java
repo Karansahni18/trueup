@@ -29,7 +29,8 @@ public class LedgerService {
         validateBalanced(command, accounts);
 
         JournalEntry entry = new JournalEntry(
-                command.tenantId(), command.entryDate(), command.description().trim());
+                command.tenantId(), command.entryDate(), command.description().trim(),
+                command.sourceEventId());
         for (PostEntryCommand.Line line : command.lines()) {
             entry.addLine(accounts.get(line.accountId()), line.direction(), line.amountMinor());
         }

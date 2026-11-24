@@ -38,11 +38,19 @@ public class JournalEntry {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    @Column(name = "source_event_id", updatable = false)
+    private UUID sourceEventId;
+
     @OneToMany(mappedBy = "entry", cascade = CascadeType.PERSIST)
     private List<JournalLine> lines = new ArrayList<>();
 
     protected JournalEntry() {
         // required by JPA
+    }
+
+    public JournalEntry(UUID tenantId, LocalDate entryDate, String description, UUID sourceEventId) {
+        this(tenantId, entryDate, description);
+        this.sourceEventId = sourceEventId;
     }
 
     public JournalEntry(UUID tenantId, LocalDate entryDate, String description) {
@@ -75,6 +83,10 @@ public class JournalEntry {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public UUID getSourceEventId() {
+        return sourceEventId;
     }
 
     public List<JournalLine> getLines() {
