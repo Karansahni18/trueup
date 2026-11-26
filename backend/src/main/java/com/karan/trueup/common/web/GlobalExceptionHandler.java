@@ -7,6 +7,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.karan.trueup.banking.InvalidStatementException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,6 +37,15 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed.");
         problem.setTitle("Invalid request");
         problem.setProperty("errors", errors);
+        return problem;
+    }
+
+    @ExceptionHandler(InvalidStatementException.class)
+    public ProblemDetail handleInvalidStatement(InvalidStatementException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "The bank statement could not be imported.");
+        problem.setTitle("Invalid bank statement");
+        problem.setProperty("problems", ex.getProblems());
         return problem;
     }
 }
